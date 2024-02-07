@@ -13,6 +13,7 @@ public class NoiseManager : MonoBehaviour
     public Slider maxHeightSlider;
     public Slider scaleSlider;
     public Terrain terrain;
+    public TMP_Dropdown dropdown;
     /// <summary>
     /// the noisemap is always going to be a square, so this is the width and height of the image we get
     /// </summary>
@@ -32,13 +33,19 @@ public class NoiseManager : MonoBehaviour
 
     private void Start()
     {
-        switch (noiseType)
+        var options = new List<TMP_Dropdown.OptionData>();
+        foreach(var key in Noise.NOISE_TYPES.Keys)
         {
-            case NoiseType.PerlinNoise:
-                noise = new PerlinNoise();
-                GenerateNewSeed();
-                break;
+            options.Add(new TMP_Dropdown.OptionData(key));
         }
+        dropdown.AddOptions(options);
+        dropdown.onValueChanged.AddListener(i =>
+        {
+            noise = Noise.NOISE_TYPES[dropdown.options[i].text];
+            GenerateNewSeed();
+            RegenerateNoiseTerrain();
+        });
+
         noiseLevel = scaleSlider.value;
         scaleSlider.onValueChanged.AddListener((value) =>
         {
@@ -59,9 +66,16 @@ public class NoiseManager : MonoBehaviour
         });
         newSeedButton.onClick.AddListener(() =>
         {
-            GenerateNewSeed();
-            RegenerateNoiseTerrain();
+            if(noise != null)
+            {
+                GenerateNewSeed();
+                RegenerateNoiseTerrain();
+
+            }
         });
+
+        noise = Noise.NOISE_TYPES[dropdown.options[0].text];
+        GenerateNewSeed();
         RegenerateNoiseTerrain();
     }
     private void Update()
@@ -98,23 +112,39 @@ public class NoiseManager : MonoBehaviour
     }
     private void GenerateNoise()
     {
-        noiseData = new float[noiseResolution, noiseResolution];
-        for (int i = 0; i < noiseResolution * noiseResolution; i++)
+        if(noise != null)
         {
-            var j = noise.GetNoiseMap(i / noiseResolution, i % noiseResolution, noiseLevel);
-            noiseData[i % noiseResolution, i / noiseResolution] = j * currentHeight; // i % noiseScale = x coordinate, i / noiseScale = yCoordinate
-            //Debug.Log($"{i % noiseResolution}, {i / noiseResolution}");
+            noiseData = new float[noiseResolution, noiseResolution];
+            for (int i = 0; i < noiseResolution * noiseResolution; i++)
+            {
+                var j = noise.GetNoiseMap(i / noiseResolution, i % noiseResolution, noiseLevel);
+
+                noiseData[i % noiseResolution, i / noiseResolution] = j * currentHeight + Mathf.Lerp(.25f, 0, currentHeight); // i % noiseScale = x coordinate, i / noiseScale = yCoordinate
+            }
         }
 
     }
 
     private void SetNoiseTexture()
     {
+        noiseData ??= new float[noiseResolution, noiseResolution];
+
         Color32[] pixels = new Color32[noiseResolution * noiseResolution];
         for(int i = 0; i < noiseResolution * noiseResolution; i++)
         {
             var noiseFactor = noiseData[i / noiseResolution, i % noiseResolution];
-            pixels[i] = Color.Lerp(Color.black, Color.white, noiseFactor);
+            if(noiseFactor < .2)
+            {
+                pixels[i] = Color32.Lerp(new Color32(0,0,82, 255), new Color32(164, 251, 252, 255), noiseFactor * 5);
+            }
+            else if(noiseFactor < .6)
+            {
+                pixels[i] = Color32.Lerp(new Color32(7, 82, 0, 255), new Color32(155, 247, 146, 255), noiseFactor * 5/3);
+            }
+            else
+            {
+                pixels[i] = Color32.Lerp(new Color32(112, 89, 63, 255), new Color32(255, 255, 255, 255), noiseFactor);
+            }
         }
         Texture2D texture = new(noiseResolution, noiseResolution);
         texture.SetPixels32(pixels);
@@ -125,5 +155,6 @@ public class NoiseManager : MonoBehaviour
     private void ApplyNoiseToTerrain()
     {
         terrain.terrainData.SetHeights(0, 0, noiseData);
+        
     }
 }
