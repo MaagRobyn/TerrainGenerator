@@ -6,8 +6,8 @@ public class PerlinNoise : Noise
 {
     public override float GetNoiseMap(float x, float y, float scale = 1)
     {
-        x *= scale;
-        y *= scale;
+        x = scale * (x + seed);
+        y = scale * (y + seed);
         return Mathf.PerlinNoise(x, y);
     }
 }
