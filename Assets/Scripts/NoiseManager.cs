@@ -14,6 +14,14 @@ public class NoiseManager : MonoBehaviour
     public Slider scaleSlider;
     public Terrain terrain;
     public TMP_Dropdown dropdown;
+
+    public Color deepSea;
+    public Color coast;
+    public Color grass;
+    public Color higherElevationGrass;
+    public Color lowerSnow;
+    public Color upperSnow;
+
     /// <summary>
     /// the noisemap is always going to be a square, so this is the width and height of the image we get
     /// </summary>
@@ -135,15 +143,15 @@ public class NoiseManager : MonoBehaviour
             var noiseFactor = noiseData[i / noiseResolution, i % noiseResolution];
             if(noiseFactor < .2)
             {
-                pixels[i] = Color32.Lerp(new Color32(0,0,82, 255), new Color32(164, 251, 252, 255), noiseFactor * 5);
+                pixels[i] = Color32.Lerp(deepSea, coast, noiseFactor * 5);
             }
             else if(noiseFactor < .6)
             {
-                pixels[i] = Color32.Lerp(new Color32(7, 82, 0, 255), new Color32(155, 247, 146, 255), noiseFactor * 5/3);
+                pixels[i] = Color32.Lerp(grass, higherElevationGrass, noiseFactor * 5/3);
             }
             else
             {
-                pixels[i] = Color32.Lerp(new Color32(112, 89, 63, 255), new Color32(255, 255, 255, 255), noiseFactor);
+                pixels[i] = Color32.Lerp(lowerSnow, upperSnow, noiseFactor);
             }
         }
         Texture2D texture = new(noiseResolution, noiseResolution);

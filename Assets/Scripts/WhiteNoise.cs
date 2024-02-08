@@ -7,7 +7,7 @@ namespace Assets.Scripts
     {
         public override float GetNoiseMap(float x, float y, float scale = 1)
         {
-            return Random.Range(0, 1);
+            return Random.Range(1-scale, scale);
         }
     }
 }

@@ -8,7 +8,8 @@ public abstract class Noise
     public static Dictionary<string, Noise> NOISE_TYPES = new()
     {
         { "Perlin", new PerlinNoise() },
-        { "White", new WhiteNoise() }
+        { "White", new WhiteNoise() },
+        { "Robyn", new RobynNoise() }
     };
     public int seed;
     public abstract float GetNoiseMap(float x, float y, float scale = 1f);
